@@ -1,525 +1,473 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bình Chọn Lịch Thể Thao Hàng Ngày</title>
-    <!-- Tailwind CSS qua CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        zalo: {
-                            DEFAULT: '#0068ff',
-                            hover: '#0052cc',
-                            light: '#e5f0ff',
-                            dark: '#003b99'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f3f4f6;
-        }
-        .option-card {
-            transition: all 0.2s ease-in-out;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .option-card:active {
-            transform: scale(0.99);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bình Chọn Lịch Thể Thao Hàng Ngày</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{zalo:{DEFAULT:'#0068ff',hover:'#0052cc',light:'#e5f0ff',dark:'#003b99'}}}}}
+</script>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:#f3f4f6}
+.option-card{transition:all .2s ease-in-out;-webkit-tap-highlight-color:transparent}
+.option-card:active{transform:scale(.99)}
+.day-cell{aspect-ratio:1/1;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+.day-cell:active{transform:scale(.92)}
+</style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-3 sm:p-4">
 
-    <!-- KHUNG CARD BÌNH CHỌN CHÍNH -->
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        
-        <!-- HEADER -->
-        <div class="bg-zalo text-white p-4 relative" style="background-color: #0068ff;">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span class="inline-block bg-white/20 text-xs px-2.5 py-0.5 rounded-full font-medium mb-1 backdrop-blur-sm" id="dateBadge">
-                        Đang tải ngày...
-                    </span>
-                    <h1 class="text-xl font-bold tracking-tight">Hôm nay có ai chơi?</h1>
-                </div>
-                <button onclick="changeUserNamePrompt()" title="Đổi tên người dùng" class="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/10 transition">
-                    <i class="fa-solid fa-user-gear text-lg">⚙️</i>
-                </button>
-            </div>
-            
-            <div class="mt-3 pt-3 border-t border-white/15 flex justify-between items-center text-xs text-white/90">
-                <div class="flex items-center gap-1.5">
-                    <i class="fa-regular fa-user-circle text-sm">👤</i>
-                    <span>Tạo bởi: <strong id="currentUserDisplay">...</strong></span>
-                </div>
-                <div class="flex items-center gap-1.5 font-medium bg-black/10 px-2 py-1 rounded">
-                    <i class="fa-regular fa-clock">⏰</i>
-                    <span id="pollStatusText">Đang kiểm tra...</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- CẢNH BÁO TRẠNG THÁI (Nếu đóng hoặc chưa mở) -->
-        <div id="statusBanner" class="hidden p-3 bg-amber-50 border-b border-amber-100 text-amber-800 text-xs flex items-center gap-2">
-            <span class="flex-shrink-0">ℹ️</span>
-            <span id="statusBannerText">Thông báo trạng thái bình chọn</span>
-        </div>
-
-        <!-- DANH SÁCH LỰA CHỌN (OPTIONS) -->
-        <div class="p-4">
-            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">CHỌN 1 KHUNG GIỜ PHÙ HỢP VỚI BẠN:</p>
-            <div id="optionsContainer" class="space-y-2.5">
-                <!-- Javascript sẽ render động các lựa chọn vào đây -->
-            </div>
-
-            <!-- NÚT XÁC NHẬN BÌNH CHỌN -->
-            <div class="mt-5 space-y-2">
-                <button id="btnSubmitVote" onclick="submitVote()" disabled 
-                    class="w-full py-3 px-4 bg-zalo hover:bg-zalo-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2" style="background-color: #0068ff;">
-                    <span>✓</span>
-                    <span>Xác nhận bình chọn</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- KHU VỰC THỐNG KÊ CHI TIẾT (DANH SÁCH NGƯỜI THAM GIA) -->
-        <div class="border-t border-gray-100 bg-slate-50 p-4">
-            <div class="flex justify-between items-center mb-3">
-                <h2 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                    <span class="text-zalo">📊</span>
-                    Danh sách chi tiết
-                </h2>
-                <span class="text-xs font-medium bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full" id="totalVotesBadge">
-                    Tổng: 0 lượt
-                </span>
-            </div>
-            
-            <div id="votersDetailContainer" class="space-y-2 text-xs">
-                <!-- Javascript sẽ render danh sách người chọn từng option vào đây -->
-            </div>
-        </div>
-        
+<div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+  <!-- HEADER -->
+  <div class="text-white p-4 relative" style="background-color:#0068ff">
+    <div class="flex justify-between items-start">
+      <div>
+        <span class="inline-block bg-white/20 text-xs px-2.5 py-0.5 rounded-full font-medium mb-1" id="dateBadge">Đang tải ngày...</span>
+        <h1 class="text-xl font-bold tracking-tight">Hôm nay có ai chơi?</h1>
+      </div>
+      <div class="flex items-center gap-1">
+        <button onclick="openCalendar()" class="text-white text-xs font-semibold bg-white/20 hover:bg-white/30 px-2.5 py-1.5 rounded-lg transition">📅 Lịch</button>
+        <button onclick="changeUserNamePrompt()" title="Đổi tên người dùng" class="text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition">⚙️</button>
+      </div>
     </div>
-
-    <!-- MODAL ĐỊNH DANH (NHẬP TÊN LẦN ĐẦU) -->
-    <div id="nameModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
-            <div class="text-center">
-                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
-                    👤
-                </div>
-                <h3 class="text-lg font-bold text-gray-900">Nhập tên của bạn</h3>
-                <p class="text-xs text-gray-500 mt-1">Vui lòng nhập Họ tên hoặc Biệt danh để mọi người trong nhóm nhận biết khi bạn bình chọn.</p>
-            </div>
-            
-            <form onsubmit="saveUserName(event)" class="space-y-3">
-                <input type="text" id="inputUserName" required placeholder="Ví dụ: Nguyễn Văn A (A.Sơn)" 
-                    class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                
-                <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm transition">
-                    Lưu & Tiếp tục
-                </button>
-            </form>
-        </div>
+    <div class="mt-3 pt-3 border-t border-white/15 flex justify-between items-center text-xs text-white/90">
+      <div class="flex items-center gap-1.5"><span>👤</span><span>Tạo bởi: <strong id="currentUserDisplay">...</strong></span></div>
+      <div class="flex items-center gap-1.5 font-medium bg-black/10 px-2 py-1 rounded"><span>⏰</span><span id="pollStatusText">Đang kiểm tra...</span></div>
     </div>
+  </div>
 
-    <!-- JAVASCRIPT LOGIC -->
-    <script>
-        // CẤU HÌNH NGÀY LỄ CỐ ĐỊNH (YYYY-MM-DD)
-        const HOLIDAYS = [
-            "2026-01-01", 
-            "2026-04-30", 
-            "2026-05-01", 
-            "2026-09-02"
-        ];
+  <div id="statusBanner" class="hidden p-3 bg-amber-50 border-b border-amber-100 text-amber-800 text-xs flex items-center gap-2">
+    <span class="flex-shrink-0">ℹ️</span><span id="statusBannerText"></span>
+  </div>
 
-        let currentUser = '';
-        try {
-            currentUser = localStorage.getItem('voter_name') || '';
-        } catch(e) {
-            console.warn('LocalStorage not accessible', e);
-        }
+  <div class="p-4">
+    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">CHỌN 1 KHUNG GIỜ PHÙ HỢP VỚI BẠN:</p>
+    <div id="optionsContainer" class="space-y-2.5"></div>
+    <div class="mt-5 space-y-2">
+      <button id="btnSubmitVote" onclick="submitVote()" disabled
+        class="w-full py-3 px-4 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2" style="background-color:#0068ff">
+        <span>✓</span><span>Xác nhận bình chọn</span>
+      </button>
+    </div>
+  </div>
 
-        let selectedOptionIndex = null;
-        let isPollOpen = false;
-        let todayKey = '';
-        let pollSchedule = {
-            options: [],
-            closeTimeStr: '',
-            isHolidayOrWeekend: false
-        };
+  <div class="border-t border-gray-100 bg-slate-50 p-4">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-sm font-bold text-gray-800 flex items-center gap-1.5"><span>📊</span>Danh sách chi tiết</h2>
+      <span class="text-xs font-medium bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full" id="totalVotesBadge">Tổng: 0 lượt</span>
+    </div>
+    <div id="votersDetailContainer" class="space-y-2 text-xs"></div>
+  </div>
+</div>
 
-        // KHỞI TẠO TỰ ĐỘNG CHẠY NGAY
-        function initApp() {
-            calculateDailySchedule();
-            checkUserIdentity();
-            loadVotesData();
-            renderOptions();
-            renderVotersDetail();
-            createHistoryPanel();
-            renderVoteHistory();
-        }
+<!-- MODAL NHẬP TÊN -->
+<div id="nameModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 hidden">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+    <div class="text-center">
+      <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">👤</div>
+      <h3 class="text-lg font-bold text-gray-900">Nhập tên của bạn</h3>
+      <p class="text-xs text-gray-500 mt-1">Vui lòng nhập Họ tên hoặc Biệt danh để mọi người trong nhóm nhận biết khi bạn bình chọn.</p>
+    </div>
+    <form onsubmit="saveUserName(event)" class="space-y-3">
+      <input type="text" id="inputUserName" required placeholder="Ví dụ: Nguyễn Văn A (A.Sơn)" class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+      <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl text-sm transition">Lưu &amp; Tiếp tục</button>
+    </form>
+  </div>
+</div>
 
-        function escapeHtml(value) {
-            return String(value).replace(/[&<>"']/g, char => ({
-                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-            })[char]);
-        }
+<!-- MODAL LỊCH CẤU HÌNH NGÀY NGHỈ -->
+<div id="calModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-3 z-50 hidden" onclick="if(event.target===this)closeCalendar()">
+  <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden max-h-[95vh] overflow-y-auto">
+    <div class="flex justify-between items-center px-4 py-3 text-white" style="background-color:#0068ff">
+      <h3 class="font-bold text-base">📅 Cấu hình ngày nghỉ</h3>
+      <button onclick="closeCalendar()" class="text-xl leading-none px-2 hover:bg-white/10 rounded">×</button>
+    </div>
+    <div class="p-4 space-y-3">
+      <!-- Năm -->
+      <div class="flex items-center justify-between">
+        <button onclick="changeCalYear(-1)" class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold">‹</button>
+        <span class="text-lg font-bold text-gray-800">Năm <span id="calYearLabel"></span></span>
+        <button onclick="changeCalYear(1)" class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold">›</button>
+      </div>
+      <!-- 12 tháng -->
+      <div id="monthPicker" class="grid grid-cols-6 gap-1.5"></div>
+      <!-- Lưới ngày -->
+      <div>
+        <div class="text-center text-sm font-semibold text-gray-700 mb-1.5" id="calMonthLabel"></div>
+        <div class="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-gray-500 mb-1">
+          <div>T2</div><div>T3</div><div>T4</div><div>T5</div><div>T6</div><div class="text-blue-600">T7</div><div class="text-blue-600">CN</div>
+        </div>
+        <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+      </div>
+      <!-- Chú thích -->
+      <div class="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-600">
+        <span>🟢 Hôm nay</span><span>🔴 Ngày nghỉ lễ</span><span>🔵 Cuối tuần</span>
+      </div>
+      <p class="text-[11px] text-gray-400">Nhấp vào ngày để đánh dấu nghỉ (đỏ) hoặc bỏ đánh dấu. Ngày nghỉ và cuối tuần dùng khung giờ 16h00 – 17h30.</p>
+      <div class="flex gap-2">
+        <button onclick="resetCalendarYear()" class="flex-1 py-2 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-gray-700">Đặt lại mặc định năm này</button>
+        <button onclick="closeCalendar()" class="flex-1 py-2 text-xs font-semibold rounded-lg text-white" style="background-color:#0068ff">Xong</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function createHistoryPanel() {
-            const panel = document.createElement('section');
-            panel.className = 'border-t border-gray-100 p-4';
-            panel.innerHTML = `
-                <div class="flex items-center justify-between mb-3 gap-2">
-                    <h2 class="text-sm font-bold text-gray-800">Lịch sử vote theo ngày</h2>
-                    <button type="button" onclick="exportVoteHistory()" class="text-xs text-blue-600 font-semibold">Tải CSV</button>
-                </div>
-                <p class="text-xs text-gray-500 mb-3">Dữ liệu được lưu trên trình duyệt này. Mỗi tên được tính là một người trong ngày, kể cả chọn Nghỉ. Xóa dữ liệu trình duyệt sẽ xóa lịch sử.</p>
-                <div id="voteHistoryContainer" class="space-y-2 text-xs"></div>`;
-            document.getElementById('optionsContainer').parentElement.parentElement.appendChild(panel);
-        }
+<script>
+// ===== NGÀY LỄ MẶC ĐỊNH =====
+// Lễ dương lịch cố định hàng năm (MM-DD)
+const FIXED_HOLIDAYS = ["01-01", "04-30", "05-01", "09-02"];
+// Ngày lễ theo năm cụ thể (Tết Âm lịch, Giỗ Tổ, nghỉ bù...) — chỉnh sửa tại đây nếu cần
+const YEAR_HOLIDAYS = {
+  2026: ["02-14","02-15","02-16","02-17","02-18","02-19","02-20","02-21","02-22","04-26","04-27","09-01"]
+};
+const MONTH_NAMES = ["Tháng 1","Tháng 2","Tháng 3","Tháng 4","Tháng 5","Tháng 6","Tháng 7","Tháng 8","Tháng 9","Tháng 10","Tháng 11","Tháng 12"];
 
-        function getVoteHistory() {
-            const history = [];
-            try {
-                for (let index = 0; index < localStorage.length; index++) {
-                    const key = localStorage.key(index);
-                    if (!/^voting_data_\d{4}-\d{2}-\d{2}$/.test(key)) continue;
-                    try {
-                        const votes = JSON.parse(localStorage.getItem(key));
-                        if (!Array.isArray(votes) || !votes.every(group => Array.isArray(group))) continue;
-                        const names = votes.flat().filter(name => typeof name === 'string' && name.trim());
-                        history.push({ date: key.slice('voting_data_'.length), total: new Set(names).size });
-                    } catch (error) {
-                        console.warn('Không đọc được dữ liệu vote của ngày', key, error);
-                    }
-                }
-            } catch (error) {
-                throw new Error('Không thể đọc lịch sử. Vui lòng cho phép trình duyệt lưu dữ liệu.');
-            }
-            const today = todayKey.slice('voting_data_'.length);
-            if (!history.some(entry => entry.date === today)) history.push({ date: today, total: 0 });
-            return history.sort((a, b) => b.date.localeCompare(a.date));
-        }
+const pad = n => String(n).padStart(2, '0');
+const fmt = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
 
-        function renderVoteHistory() {
-            const container = document.getElementById('voteHistoryContainer');
-            if (!container) return;
-            try {
-                container.innerHTML = getVoteHistory().map(entry => {
-                    const [year, month, day] = entry.date.split('-');
-                    return `<div class="flex justify-between items-center bg-slate-50 rounded-lg p-2.5">
-                        <span>${day}/${month}/${year}</span>
-                        <strong class="text-blue-600">${entry.total} người</strong>
-                    </div>`;
-                }).join('');
-            } catch (error) {
-                container.textContent = error.message;
-            }
-        }
+function isDefaultHoliday(dateStr) {
+  const y = parseInt(dateStr.slice(0, 4)), md = dateStr.slice(5);
+  return FIXED_HOLIDAYS.includes(md) || (YEAR_HOLIDAYS[y] || []).includes(md);
+}
 
-        function exportVoteHistory() {
-            try {
-                const rows = [['Ngày', 'Số người vote'], ...getVoteHistory().map(entry => [entry.date, entry.total])];
-                const blob = new Blob(['\uFEFF' + rows.map(row => row.join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'thong-ke-vote-theo-ngay.csv';
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            } catch (error) {
-                alert(error.message);
-            }
-        }
+// Ghi đè do người dùng cấu hình: { "YYYY-MM-DD": true|false }
+let holidayOverrides = {};
+try { holidayOverrides = JSON.parse(localStorage.getItem('holiday_overrides') || '{}'); } catch (e) {}
+function saveOverrides() { try { localStorage.setItem('holiday_overrides', JSON.stringify(holidayOverrides)); } catch (e) {} }
 
-        function refreshDailyPoll() {
-            const previousKey = todayKey;
-            calculateDailySchedule();
-            if (previousKey !== todayKey) loadVotesData();
-            renderOptions();
-            renderVotersDetail();
-            renderVoteHistory();
-        }
+function isHoliday(dateStr) {
+  return dateStr in holidayOverrides ? holidayOverrides[dateStr] : isDefaultHoliday(dateStr);
+}
 
-        function calculateDailySchedule() {
-            const now = new Date();
-            
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const date = String(now.getDate()).padStart(2, '0');
-            todayKey = `voting_data_${year}-${month}-${date}`;
+// ===== TRẠNG THÁI APP =====
+let currentUser = '';
+try { currentUser = localStorage.getItem('voter_name') || ''; } catch (e) {}
+let selectedOptionIndex = null, isPollOpen = false, todayKey = '';
+let pollSchedule = { options: [], closeTimeStr: '', isHolidayOrWeekend: false };
 
-            const dayOfWeekStr = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][now.getDay()];
-            document.getElementById('dateBadge').innerText = `${dayOfWeekStr}, ${date}/${month}/${year}`;
+function initApp() {
+  calculateDailySchedule();
+  checkUserIdentity();
+  loadVotesData();
+  renderOptions();
+  renderVotersDetail();
+  createHistoryPanel();
+  renderVoteHistory();
+}
 
-            const dateStr = `${year}-${month}-${date}`;
-            const isWeekend = (now.getDay() === 0 || now.getDay() === 6);
-            const isHoliday = HOLIDAYS.includes(dateStr);
-            const isSpecialDay = isWeekend || isHoliday;
+function calculateDailySchedule() {
+  const now = new Date();
+  const year = now.getFullYear(), month = pad(now.getMonth() + 1), date = pad(now.getDate());
+  todayKey = `voting_data_${year}-${month}-${date}`;
+  const dow = ['Chủ Nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'][now.getDay()];
+  document.getElementById('dateBadge').innerText = `${dow}, ${date}/${month}/${year}`;
 
-            pollSchedule.isHolidayOrWeekend = isSpecialDay;
+  const dateStr = `${year}-${month}-${date}`;
+  const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+  const isSpecialDay = isWeekend || isHoliday(dateStr);
+  pollSchedule.isHolidayOrWeekend = isSpecialDay;
 
-            if (isSpecialDay) {
-                pollSchedule.options = ["16h00", "16h30", "17h00", "17h30", "Nghỉ"];
-                pollSchedule.closeTimeStr = "16:00";
-            } else {
-                pollSchedule.options = ["17h00", "17h30", "18h00", "Nghỉ"];
-                pollSchedule.closeTimeStr = "17:00";
-            }
+  if (isSpecialDay) {
+    pollSchedule.options = ["16h00", "16h30", "17h00", "17h30", "Nghỉ"];
+    pollSchedule.closeTimeStr = "16:00";
+  } else {
+    pollSchedule.options = ["17h00", "17h30", "18h00", "Nghỉ"];
+    pollSchedule.closeTimeStr = "17:00";
+  }
 
-            const openTime = new Date(now);
-            openTime.setHours(9, 0, 0, 0);
+  // Giữ lịch của ngày đã có vote khi cấu hình ngày nghỉ thay đổi.
+  try {
+    const saved = JSON.parse(localStorage.getItem(todayKey) || 'null');
+    if (Array.isArray(saved) && saved.every(group => Array.isArray(group)) && saved.some(group => group.length)) {
+      if (saved.length === 5) {
+        pollSchedule.options = ["16h00", "16h30", "17h00", "17h30", "Nghỉ"];
+        pollSchedule.closeTimeStr = "16:00";
+        pollSchedule.isHolidayOrWeekend = true;
+      } else if (saved.length === 4) {
+        pollSchedule.options = ["17h00", "17h30", "18h00", "Nghỉ"];
+        pollSchedule.closeTimeStr = "17:00";
+        pollSchedule.isHolidayOrWeekend = false;
+      }
+    }
+  } catch (e) {}
 
-            const closeTime = new Date(now);
-            const [cHour, cMin] = pollSchedule.closeTimeStr.split(':');
-            closeTime.setHours(parseInt(cHour), parseInt(cMin), 0, 0);
+  const openTime = new Date(now); openTime.setHours(9, 0, 0, 0);
+  const closeTime = new Date(now);
+  const [cH, cM] = pollSchedule.closeTimeStr.split(':');
+  closeTime.setHours(parseInt(cH), parseInt(cM), 0, 0);
 
-            const statusText = document.getElementById('pollStatusText');
-            const statusBanner = document.getElementById('statusBanner');
-            const statusBannerText = document.getElementById('statusBannerText');
+  const st = document.getElementById('pollStatusText');
+  const banner = document.getElementById('statusBanner');
+  const bannerText = document.getElementById('statusBannerText');
+  if (now < openTime) {
+    isPollOpen = false; st.innerText = "Mở lúc 09:00";
+    banner.classList.remove('hidden'); bannerText.innerText = "Bình chọn sẽ chính thức mở lúc 09:00 sáng nay.";
+  } else if (now > closeTime) {
+    isPollOpen = false; st.innerText = "Đã hết giờ";
+    banner.classList.remove('hidden'); bannerText.innerText = `Đã hết giờ bình chọn (Kết thúc lúc ${pollSchedule.closeTimeStr} hàng ngày).`;
+  } else {
+    isPollOpen = true; st.innerText = `Đóng lúc ${pollSchedule.closeTimeStr}`;
+    banner.classList.add('hidden');
+  }
+}
 
-            if (now < openTime) {
-                isPollOpen = false;
-                statusText.innerText = "Mở lúc 09:00";
-                statusBanner.classList.remove('hidden');
-                statusBannerText.innerText = "Bình chọn sẽ chính thức mở lúc 09:00 sáng nay.";
-            } else if (now > closeTime) {
-                isPollOpen = false;
-                statusText.innerText = "Đã hết giờ";
-                statusBanner.classList.remove('hidden');
-                statusBannerText.innerText = `Đã hết giờ bình chọn (Kết thúc lúc ${pollSchedule.closeTimeStr} hàng ngày).`;
-            } else {
-                isPollOpen = true;
-                statusText.innerText = `Đóng lúc ${pollSchedule.closeTimeStr}`;
-                statusBanner.classList.add('hidden');
-            }
-        }
+function checkUserIdentity() {
+  if (!currentUser) {
+    document.getElementById('nameModal').classList.remove('hidden');
+    document.getElementById('currentUserDisplay').innerText = 'Chưa nhận diện';
+  } else {
+    document.getElementById('nameModal').classList.add('hidden');
+    document.getElementById('currentUserDisplay').innerText = currentUser;
+  }
+}
 
-        function checkUserIdentity() {
-            if (!currentUser) {
-                document.getElementById('nameModal').classList.remove('hidden');
-                document.getElementById('currentUserDisplay').innerText = 'Chưa nhận diện';
-            } else {
-                document.getElementById('nameModal').classList.add('hidden');
-                document.getElementById('currentUserDisplay').innerText = currentUser;
-            }
-        }
+function setUser(name) {
+  currentUser = name;
+  try { localStorage.setItem('voter_name', currentUser); } catch (e) {}
+  document.getElementById('currentUserDisplay').innerText = currentUser;
+  loadVotesData(); renderOptions(); renderVotersDetail();
+}
+function saveUserName(e) {
+  e.preventDefault();
+  const v = document.getElementById('inputUserName').value.trim();
+  if (v) { setUser(v); document.getElementById('nameModal').classList.add('hidden'); }
+}
+function changeUserNamePrompt() {
+  const n = prompt("Nhập tên mới của bạn:", currentUser || '');
+  if (n && n.trim()) setUser(n.trim());
+}
 
-        function saveUserName(e) {
-            e.preventDefault();
-            const inputVal = document.getElementById('inputUserName').value.trim();
-            if (inputVal) {
-                currentUser = inputVal;
-                try {
-                    localStorage.setItem('voter_name', currentUser);
-                } catch(e){}
-                document.getElementById('currentUserDisplay').innerText = currentUser;
-                document.getElementById('nameModal').classList.add('hidden');
-                
-                loadVotesData();
-                renderOptions();
-                renderVotersDetail();
-            }
-        }
+function getVotesData() {
+  try {
+    const s = localStorage.getItem(todayKey);
+    if (s) {
+      const d = JSON.parse(s);
+      if (Array.isArray(d) && d.length === pollSchedule.options.length &&
+          d.every(group => Array.isArray(group) && group.every(name => typeof name === 'string'))) return d;
+    }
+  } catch (e) {}
+  return pollSchedule.options.map(() => []);
+}
+function saveVotesData(d) {
+  try { localStorage.setItem(todayKey, JSON.stringify(d)); return true; }
+  catch (e) { alert('Không lưu được vote. Vui lòng kiểm tra quyền lưu dữ liệu và dung lượng trình duyệt.'); return false; }
+}
 
-        function changeUserNamePrompt() {
-            const newName = prompt("Nhập tên mới của bạn:", currentUser || '');
-            if (newName && newName.trim() !== '') {
-                currentUser = newName.trim();
-                try {
-                    localStorage.setItem('voter_name', currentUser);
-                } catch(e){}
-                document.getElementById('currentUserDisplay').innerText = currentUser;
-                loadVotesData();
-                renderOptions();
-                renderVotersDetail();
-            }
-        }
+function loadVotesData() {
+  if (!currentUser) return;
+  selectedOptionIndex = null;
+  getVotesData().forEach((v, i) => { if (v.includes(currentUser)) selectedOptionIndex = i; });
+}
 
-        function getVotesData() {
-            try {
-                const dataStr = localStorage.getItem(todayKey);
-                if (dataStr) {
-                    return JSON.parse(dataStr);
-                }
-            } catch(e){}
-            return pollSchedule.options.map(() => []);
-        }
+function renderOptions() {
+  const container = document.getElementById('optionsContainer');
+  const votes = getVotesData();
+  const total = votes.reduce((a, c) => a + c.length, 0);
+  container.innerHTML = pollSchedule.options.map((opt, idx) => {
+    const n = votes[idx] ? votes[idx].length : 0;
+    const sel = selectedOptionIndex === idx;
+    const pct = total > 0 ? Math.round(n / total * 100) : 0;
+    return `
+      <div onclick="handleSelectOption(${idx})"
+        class="option-card relative flex items-center justify-between p-3.5 border rounded-xl cursor-pointer overflow-hidden select-none ${sel ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' : 'border-gray-200 bg-white hover:border-gray-300'} ${!isPollOpen ? 'opacity-75 cursor-not-allowed' : ''}">
+        <div class="absolute left-0 top-0 bottom-0 bg-blue-100/60 transition-all duration-300" style="width:${pct}%"></div>
+        <div class="flex items-center gap-3 relative z-10">
+          <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center ${sel ? 'border-blue-600 bg-blue-600' : 'border-gray-300 bg-white'}">${sel ? '<span class="text-white text-xs">✓</span>' : ''}</div>
+          <span class="font-semibold text-sm ${sel ? 'text-blue-600' : 'text-gray-800'}">${opt}</span>
+        </div>
+        <div class="relative z-10 flex items-center gap-1">
+          <span class="text-xs font-bold ${sel ? 'text-blue-600' : 'text-gray-600'}">${n}</span>
+          <span class="text-[11px] text-gray-400">lượt</span>
+        </div>
+      </div>`;
+  }).join('');
 
-        function saveVotesData(data) {
-            try {
-                localStorage.setItem(todayKey, JSON.stringify(data));
-                return true;
-            } catch(e) {
-                alert('Không lưu được vote. Vui lòng cho phép lưu dữ liệu hoặc kiểm tra dung lượng trình duyệt.');
-                return false;
-            }
-        }
+  const btn = document.getElementById('btnSubmitVote');
+  const ok = isPollOpen && selectedOptionIndex !== null;
+  btn.disabled = !ok;
+  btn.style.backgroundColor = ok ? '#0068ff' : '';
+}
 
-        function loadVotesData() {
-            if (!currentUser) return;
-            const votesData = getVotesData();
-            selectedOptionIndex = null;
-            votesData.forEach((voters, optIdx) => {
-                if (voters.includes(currentUser)) {
-                    selectedOptionIndex = optIdx;
-                }
-            });
-        }
+function renderVotersDetail() {
+  const container = document.getElementById('votersDetailContainer');
+  const votes = getVotesData();
+  let total = 0;
+  container.innerHTML = pollSchedule.options.map((opt, idx) => {
+    const voters = votes[idx] || [];
+    total += voters.length;
+    if (!voters.length) return `<div class="bg-white p-2.5 rounded-lg border border-gray-100 flex justify-between items-center text-gray-400"><span class="font-medium">${opt}:</span><span class="italic text-[11px]">Chưa có ai chọn</span></div>`;
+    const names = voters.map(n => {
+      const me = n === currentUser;
+      return `<span class="inline-block bg-slate-100 text-gray-700 font-medium px-2 py-0.5 rounded border ${me ? 'border-blue-400 text-blue-600 font-semibold' : 'border-slate-200'}">${escapeHtml(n)}${me ? ' (Bạn)' : ''}</span>`;
+    }).join(' ');
+    return `<div class="bg-white p-2.5 rounded-lg border border-gray-100 space-y-1"><div class="font-bold text-gray-800">${opt} (${voters.length} người):</div><div class="flex flex-wrap gap-1 pt-1">${names}</div></div>`;
+  }).join('');
+  document.getElementById('totalVotesBadge').innerText = `Tổng: ${total} lượt`;
+}
 
-        function renderOptions() {
-            const container = document.getElementById('optionsContainer');
-            const votesData = getVotesData();
-            const totalVotes = votesData.reduce((acc, curr) => acc + curr.length, 0);
+function handleSelectOption(i) { if (!isPollOpen) return; selectedOptionIndex = i; renderOptions(); }
 
-            container.innerHTML = pollSchedule.options.map((option, idx) => {
-                const voteCount = votesData[idx] ? votesData[idx].length : 0;
-                const isSelected = selectedOptionIndex === idx;
-                const percent = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
+function submitVote() {
+  const previousKey = todayKey;
+  calculateDailySchedule();
+  if (previousKey !== todayKey) {
+    loadVotesData(); renderOptions(); renderVotersDetail(); renderVoteHistory();
+    alert('Đã sang ngày mới. Vui lòng chọn lại khung giờ.');
+    return;
+  }
+  if (!isPollOpen || selectedOptionIndex === null) return;
+  if (!currentUser) { checkUserIdentity(); return; }
+  let votes = getVotesData().map(v => v.filter(n => n !== currentUser));
+  votes[selectedOptionIndex].push(currentUser);
+  if (!saveVotesData(votes)) return;
+  renderVoteHistory();
+  renderOptions(); renderVotersDetail();
+  alert(`Đã cập nhật bình chọn: "${pollSchedule.options[selectedOptionIndex]}"`);
+}
 
-                return `
-                    <div onclick="handleSelectOption(${idx})" 
-                        class="option-card relative flex items-center justify-between p-3.5 border rounded-xl cursor-pointer overflow-hidden select-none ${
-                            isSelected 
-                                ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600' 
-                                : 'border-gray-200 bg-white hover:border-gray-300'
-                        } ${!isPollOpen ? 'opacity-75 cursor-not-allowed' : ''}">
-                        
-                        <div class="absolute left-0 top-0 bottom-0 bg-blue-100/60 transition-all duration-300 -z-0" style="width: ${percent}%"></div>
+// ===== LỊCH CẤU HÌNH NGÀY NGHỈ =====
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 
-                        <div class="flex items-center gap-3 relative z-10">
-                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-300 bg-white'
-                            }">
-                                ${isSelected ? '<span class="text-white text-xs">✓</span>' : ''}
-                            </div>
-                            
-                            <span class="font-semibold text-sm ${isSelected ? 'text-blue-600' : 'text-gray-800'}">
-                                ${option}
-                            </span>
-                        </div>
+function openCalendar() {
+  const t = new Date(); calYear = t.getFullYear(); calMonth = t.getMonth();
+  document.getElementById('calModal').classList.remove('hidden');
+  renderCalendar();
+}
+function closeCalendar() { document.getElementById('calModal').classList.add('hidden'); }
+function changeCalYear(d) { calYear += d; renderCalendar(); }
+function selectCalMonth(m) { calMonth = m; renderCalendar(); }
 
-                        <div class="relative z-10 flex items-center gap-1">
-                            <span class="text-xs font-bold ${isSelected ? 'text-blue-600' : 'text-gray-600'}">
-                                ${voteCount}
-                            </span>
-                            <span class="text-[11px] text-gray-400">lượt</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+function renderCalendar() {
+  document.getElementById('calYearLabel').innerText = calYear;
+  document.getElementById('calMonthLabel').innerText = `${MONTH_NAMES[calMonth]} / ${calYear}`;
 
-            const btnSubmit = document.getElementById('btnSubmitVote');
-            if (isPollOpen && selectedOptionIndex !== null) {
-                btnSubmit.disabled = false;
-                btnSubmit.classList.remove('bg-gray-300');
-                btnSubmit.classList.add('bg-blue-600');
-            } else {
-                btnSubmit.disabled = true;
-                btnSubmit.classList.add('bg-gray-300');
-                btnSubmit.classList.remove('bg-blue-600');
-            }
-        }
+  // 12 tháng
+  document.getElementById('monthPicker').innerHTML = MONTH_NAMES.map((_, m) =>
+    `<button onclick="selectCalMonth(${m})" class="py-1.5 text-xs font-semibold rounded-lg transition ${m === calMonth ? 'text-white' : 'bg-slate-100 text-gray-700 hover:bg-slate-200'}" ${m === calMonth ? 'style="background-color:#0068ff"' : ''}>T${m + 1}</button>`
+  ).join('');
 
-        function renderVotersDetail() {
-            const container = document.getElementById('votersDetailContainer');
-            const votesData = getVotesData();
-            let totalVotes = 0;
+  // Lưới ngày (Thứ 2 → Chủ Nhật)
+  const t = new Date();
+  const todayStr = fmt(t.getFullYear(), t.getMonth(), t.getDate());
+  const offset = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  let html = '<div></div>'.repeat(offset);
 
-            const html = pollSchedule.options.map((option, idx) => {
-                const voters = votesData[idx] || [];
-                totalVotes += voters.length;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = fmt(calYear, calMonth, d);
+    const dow = new Date(calYear, calMonth, d).getDay();
+    const weekend = dow === 0 || dow === 6;
+    const hol = isHoliday(ds);
+    const today = ds === todayStr;
 
-                if (voters.length === 0) {
-                    return `
-                        <div class="bg-white p-2.5 rounded-lg border border-gray-100 flex justify-between items-center text-gray-400">
-                            <span class="font-medium">${option}:</span>
-                            <span class="italic text-[11px]">Chưa có ai chọn</span>
-                        </div>
-                    `;
-                }
+    let cls = 'bg-white border border-gray-200 text-gray-800 hover:bg-slate-50';
+    if (weekend) cls = 'bg-blue-100 text-blue-700 border border-blue-200';
+    if (hol) cls = 'bg-red-500 text-white border border-red-600 font-bold';
+    if (today) cls = 'bg-green-500 text-white border border-green-600 font-bold ring-2 ring-green-300';
+    // Hôm nay vừa là ngày nghỉ/cuối tuần: hiện chấm nhỏ
+    const dot = today && (hol || weekend) ? `<span class="absolute bottom-0.5 w-1.5 h-1.5 rounded-full ${hol ? 'bg-red-600' : 'bg-blue-600'} border border-white"></span>` : '';
 
-                const namesText = voters.map(name => {
-                    const isMe = name === currentUser;
-                    return `<span class="inline-block bg-slate-100 text-gray-700 font-medium px-2 py-0.5 rounded border border-slate-200 ${isMe ? 'border-blue-400 text-blue-600 font-semibold' : ''}">${escapeHtml(name)}${isMe ? ' (Bạn)' : ''}</span>`;
-                }).join(' ');
+    html += `<button onclick="toggleHoliday('${ds}')" class="day-cell relative flex items-center justify-center rounded-lg text-sm ${cls}">${d}${dot}</button>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
 
-                return `
-                    <div class="bg-white p-2.5 rounded-lg border border-gray-100 space-y-1">
-                        <div class="flex justify-between items-center text-gray-700">
-                            <span class="font-bold text-gray-800">${option} (${voters.length} người):</span>
-                        </div>
-                        <div class="flex flex-wrap gap-1 pt-1">
-                            ${namesText}
-                        </div>
-                    </div>
-                `;
-            }).join('');
+function toggleHoliday(ds) {
+  const next = !isHoliday(ds);
+  const weekend = [0, 6].includes(new Date(ds + 'T00:00:00').getDay());
+  const def = isDefaultHoliday(ds);
+  // Chỉ lưu khi khác mặc định (mặc định cuối tuần = không phải lễ)
+  if (next === def) delete holidayOverrides[ds]; else holidayOverrides[ds] = next;
+  saveOverrides();
+  renderCalendar();
+  refreshAfterConfig();
+}
 
-            container.innerHTML = html;
-            document.getElementById('totalVotesBadge').innerText = `Tổng: ${totalVotes} lượt`;
-        }
+function resetCalendarYear() {
+  if (!confirm(`Đặt lại toàn bộ cấu hình ngày nghỉ năm ${calYear} về mặc định?`)) return;
+  Object.keys(holidayOverrides).forEach(k => { if (k.startsWith(calYear + '-')) delete holidayOverrides[k]; });
+  saveOverrides(); renderCalendar(); refreshAfterConfig();
+}
 
-        function handleSelectOption(index) {
-            if (!isPollOpen) return;
-            selectedOptionIndex = index;
-            renderOptions();
-        }
+// Cập nhật lại bình chọn hôm nay nếu cấu hình ngày nghỉ thay đổi
+function refreshAfterConfig() {
+  calculateDailySchedule();
+  loadVotesData(); renderOptions(); renderVotersDetail();
+}
 
-        function submitVote() {
-            const previousKey = todayKey;
-            calculateDailySchedule();
-            if (previousKey !== todayKey) {
-                loadVotesData();
-                renderOptions();
-                renderVotersDetail();
-                renderVoteHistory();
-                alert('Đã sang ngày mới. Vui lòng chọn lại khung giờ.');
-                return;
-            }
-            if (!isPollOpen || selectedOptionIndex === null) return;
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
 
-            if (!currentUser) {
-                checkUserIdentity();
-                return;
-            }
+function createHistoryPanel() {
+  const panel = document.createElement('section');
+  panel.className = 'border-t border-gray-100 p-4';
+  panel.innerHTML = `<div class="flex justify-between items-center gap-2 mb-3">
+    <h2 class="text-sm font-bold text-gray-800">Lịch sử vote theo ngày</h2>
+    <button type="button" onclick="exportVoteHistory()" class="text-xs font-semibold text-blue-600">Tải CSV</button>
+  </div>
+  <p class="text-xs text-gray-500 mb-3">Mỗi tên tính một người/ngày, kể cả chọn Nghỉ. Dữ liệu lưu trên trình duyệt này; xóa dữ liệu trình duyệt sẽ xóa lịch sử.</p>
+  <div id="voteHistoryContainer" class="space-y-2 text-xs max-h-72 overflow-y-auto"></div>`;
+  document.getElementById('optionsContainer').parentElement.parentElement.appendChild(panel);
+}
 
-            let votesData = getVotesData();
+function getVoteHistory() {
+  const history = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!/^voting_data_\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+      try {
+        const votes = JSON.parse(localStorage.getItem(key));
+        if (!Array.isArray(votes) || !votes.every(group => Array.isArray(group))) continue;
+        const names = votes.flat().filter(name => typeof name === 'string' && name.trim());
+        history.push({date: key.slice('voting_data_'.length), total: new Set(names).size});
+      } catch (e) { console.warn('Không đọc được dữ liệu ngày', key); }
+    }
+  } catch (e) { throw new Error('Không đọc được lịch sử. Vui lòng cho phép trình duyệt lưu dữ liệu.'); }
+  const today = todayKey.slice('voting_data_'.length);
+  if (!history.some(row => row.date === today)) history.push({date: today, total: 0});
+  return history.sort((a, b) => b.date.localeCompare(a.date));
+}
 
-            votesData = votesData.map(voters => voters.filter(name => name !== currentUser));
-            votesData[selectedOptionIndex].push(currentUser);
+function renderVoteHistory() {
+  const container = document.getElementById('voteHistoryContainer');
+  if (!container) return;
+  try {
+    container.innerHTML = getVoteHistory().map(row => {
+      const [y, m, d] = row.date.split('-');
+      return `<div class="flex justify-between bg-slate-50 rounded-lg p-2.5"><span>${d}/${m}/${y}</span><strong class="text-blue-600">${row.total} người</strong></div>`;
+    }).join('');
+  } catch (e) { container.textContent = e.message; }
+}
 
-            if (!saveVotesData(votesData)) return;
-            renderVoteHistory();
+function exportVoteHistory() {
+  try {
+    const rows = [['Ngày','Số người vote'], ...getVoteHistory().map(row => [row.date, row.total])];
+    const blob = new Blob(['\uFEFF' + rows.map(row => row.join(',')).join('\r\n')], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = 'thong-ke-vote-theo-ngay.csv';
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) { alert(e.message); }
+}
 
-            renderOptions();
-            renderVotersDetail();
+function refreshDailyPoll() {
+  const previousKey = todayKey;
+  calculateDailySchedule();
+  if (previousKey !== todayKey) loadVotesData();
+  renderOptions(); renderVotersDetail(); renderVoteHistory();
+}
 
-            alert(`Đã cập nhật bình chọn: "${pollSchedule.options[selectedOptionIndex]}"`);
-        }
-
-        // Chạy khởi tạo ứng dụng ngay lập tức
-        initApp();
-        setInterval(refreshDailyPoll, 30000);
-        window.addEventListener('storage', event => {
-            if (event.key === null || (event.key && event.key.startsWith('voting_data_'))) {
-                loadVotesData();
-                refreshDailyPoll();
-            }
-        });
-    </script>
+initApp();
+setInterval(refreshDailyPoll, 30000);
+window.addEventListener('storage', event => {
+  if (event.key === null || (event.key && event.key.startsWith('voting_data_'))) {
+    loadVotesData(); refreshDailyPoll();
+  }
+});
+</script>
 </body>
 </html>
