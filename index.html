@@ -166,6 +166,92 @@
             loadVotesData();
             renderOptions();
             renderVotersDetail();
+            createHistoryPanel();
+            renderVoteHistory();
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+        function createHistoryPanel() {
+            const panel = document.createElement('section');
+            panel.className = 'border-t border-gray-100 p-4';
+            panel.innerHTML = `
+                <div class="flex items-center justify-between mb-3 gap-2">
+                    <h2 class="text-sm font-bold text-gray-800">Lịch sử vote theo ngày</h2>
+                    <button type="button" onclick="exportVoteHistory()" class="text-xs text-blue-600 font-semibold">Tải CSV</button>
+                </div>
+                <p class="text-xs text-gray-500 mb-3">Dữ liệu được lưu trên trình duyệt này. Mỗi tên được tính là một người trong ngày, kể cả chọn Nghỉ. Xóa dữ liệu trình duyệt sẽ xóa lịch sử.</p>
+                <div id="voteHistoryContainer" class="space-y-2 text-xs"></div>`;
+            document.getElementById('optionsContainer').parentElement.parentElement.appendChild(panel);
+        }
+
+        function getVoteHistory() {
+            const history = [];
+            try {
+                for (let index = 0; index < localStorage.length; index++) {
+                    const key = localStorage.key(index);
+                    if (!/^voting_data_\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+                    try {
+                        const votes = JSON.parse(localStorage.getItem(key));
+                        if (!Array.isArray(votes) || !votes.every(group => Array.isArray(group))) continue;
+                        const names = votes.flat().filter(name => typeof name === 'string' && name.trim());
+                        history.push({ date: key.slice('voting_data_'.length), total: new Set(names).size });
+                    } catch (error) {
+                        console.warn('Không đọc được dữ liệu vote của ngày', key, error);
+                    }
+                }
+            } catch (error) {
+                throw new Error('Không thể đọc lịch sử. Vui lòng cho phép trình duyệt lưu dữ liệu.');
+            }
+            const today = todayKey.slice('voting_data_'.length);
+            if (!history.some(entry => entry.date === today)) history.push({ date: today, total: 0 });
+            return history.sort((a, b) => b.date.localeCompare(a.date));
+        }
+
+        function renderVoteHistory() {
+            const container = document.getElementById('voteHistoryContainer');
+            if (!container) return;
+            try {
+                container.innerHTML = getVoteHistory().map(entry => {
+                    const [year, month, day] = entry.date.split('-');
+                    return `<div class="flex justify-between items-center bg-slate-50 rounded-lg p-2.5">
+                        <span>${day}/${month}/${year}</span>
+                        <strong class="text-blue-600">${entry.total} người</strong>
+                    </div>`;
+                }).join('');
+            } catch (error) {
+                container.textContent = error.message;
+            }
+        }
+
+        function exportVoteHistory() {
+            try {
+                const rows = [['Ngày', 'Số người vote'], ...getVoteHistory().map(entry => [entry.date, entry.total])];
+                const blob = new Blob(['\uFEFF' + rows.map(row => row.join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'thong-ke-vote-theo-ngay.csv';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function refreshDailyPoll() {
+            const previousKey = todayKey;
+            calculateDailySchedule();
+            if (previousKey !== todayKey) loadVotesData();
+            renderOptions();
+            renderVotersDetail();
+            renderVoteHistory();
         }
 
         function calculateDailySchedule() {
@@ -276,7 +362,11 @@
         function saveVotesData(data) {
             try {
                 localStorage.setItem(todayKey, JSON.stringify(data));
-            } catch(e){}
+                return true;
+            } catch(e) {
+                alert('Không lưu được vote. Vui lòng cho phép lưu dữ liệu hoặc kiểm tra dung lượng trình duyệt.');
+                return false;
+            }
         }
 
         function loadVotesData() {
@@ -364,7 +454,7 @@
 
                 const namesText = voters.map(name => {
                     const isMe = name === currentUser;
-                    return `<span class="inline-block bg-slate-100 text-gray-700 font-medium px-2 py-0.5 rounded border border-slate-200 ${isMe ? 'border-blue-400 text-blue-600 font-semibold' : ''}">${name}${isMe ? ' (Bạn)' : ''}</span>`;
+                    return `<span class="inline-block bg-slate-100 text-gray-700 font-medium px-2 py-0.5 rounded border border-slate-200 ${isMe ? 'border-blue-400 text-blue-600 font-semibold' : ''}">${escapeHtml(name)}${isMe ? ' (Bạn)' : ''}</span>`;
                 }).join(' ');
 
                 return `
@@ -390,6 +480,16 @@
         }
 
         function submitVote() {
+            const previousKey = todayKey;
+            calculateDailySchedule();
+            if (previousKey !== todayKey) {
+                loadVotesData();
+                renderOptions();
+                renderVotersDetail();
+                renderVoteHistory();
+                alert('Đã sang ngày mới. Vui lòng chọn lại khung giờ.');
+                return;
+            }
             if (!isPollOpen || selectedOptionIndex === null) return;
 
             if (!currentUser) {
@@ -402,7 +502,8 @@
             votesData = votesData.map(voters => voters.filter(name => name !== currentUser));
             votesData[selectedOptionIndex].push(currentUser);
 
-            saveVotesData(votesData);
+            if (!saveVotesData(votesData)) return;
+            renderVoteHistory();
 
             renderOptions();
             renderVotersDetail();
@@ -412,6 +513,13 @@
 
         // Chạy khởi tạo ứng dụng ngay lập tức
         initApp();
+        setInterval(refreshDailyPoll, 30000);
+        window.addEventListener('storage', event => {
+            if (event.key === null || (event.key && event.key.startsWith('voting_data_'))) {
+                loadVotesData();
+                refreshDailyPoll();
+            }
+        });
     </script>
 </body>
 </html>
